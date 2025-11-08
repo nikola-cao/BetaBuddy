@@ -10,7 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @State private var email: String = ""
     @State private var password: String = ""
-    @State private var navigateToTemp = false
+    @State private var navigateToFeed = false
     
     @Environment(AuthenticationVM.self) var authVM
     @Environment(\.dismiss) var dismiss
@@ -33,7 +33,7 @@ struct LoginView: View {
                     await authVM.login(email: email, password: password)
                     await authVM.updateCurrentUser()
                     if authVM.isLoggedIn {
-                        navigateToTemp = true
+                        navigateToFeed = true
                     }
                 }
             }
@@ -44,8 +44,8 @@ struct LoginView: View {
             }
             .font(.system(size: 13))
         }
-        .navigationDestination(isPresented: $navigateToTemp) {
-            Temp()
+        .navigationDestination(isPresented: $navigateToFeed) {
+            FeedView()
                 .environment(authVM)
         }
     }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Temp: View {
+struct FeedView: View {
     @Environment(AuthenticationVM.self) var authVM
     @Environment(\.dismiss) var dismiss
     
@@ -25,7 +25,7 @@ struct Temp: View {
 
 #Preview {
     NavigationStack {
-        Temp()
+        FeedView()
             .environment(AuthenticationVM())
     }
 }

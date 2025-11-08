@@ -40,15 +40,15 @@ public struct Statistics: Codable, Equatable {
     
 }
 
-enum Grades: CaseIterable {
+enum Grades: String, CaseIterable {
     
-    case vb
-    case v0tov1
-    case v1tov2
-    case v2tov4
-    case v4tov6
-    case v6tov8
-    case v8tov10
-    case v10tov12
-    case v12plus
+    case vb = "vb"
+    case v0tov1 = "v0-v1"
+    case v1tov2 = "v1-v2"
+    case v2tov4 = "v2-v4"
+    case v4tov6 = "v4-v6"
+    case v6tov8 = "v6-v8"
+    case v8tov10 = "v8-v10"
+    case v10tov12 = "v10-v12"
+    case v12plus = "v12+"
 }

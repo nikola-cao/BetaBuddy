@@ -12,7 +12,7 @@ struct RegisterUserView: View {
     @State private var email = ""
     @State private var password = ""
     
-    @State private var navigateToTemp = false
+    @State private var navigateToFeed = false
     
     @Environment(AuthenticationVM.self) var authVM
     
@@ -38,7 +38,7 @@ struct RegisterUserView: View {
                 Task {
                     await authVM.register(email: email, password: password, username: username)
                     if authVM.isLoggedIn {
-                        navigateToTemp = true
+                        navigateToFeed = true
                     }
                 }
             }
@@ -51,8 +51,8 @@ struct RegisterUserView: View {
             .font(.system(size: 13))
             .foregroundStyle(Color(.blue))
         }
-        .navigationDestination(isPresented: $navigateToTemp) {
-            Temp()
+        .navigationDestination(isPresented: $navigateToFeed) {
+            FeedView()
                 .environment(authVM)
         }
     }
