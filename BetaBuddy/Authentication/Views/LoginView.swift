@@ -31,6 +31,7 @@ struct LoginView: View {
             Button("Sign In") {
                 Task {
                     await authVM.login(email: email, password: password)
+                    await authVM.updateCurrentUser()
                     if authVM.isLoggedIn {
                         navigateToTemp = true
                     }

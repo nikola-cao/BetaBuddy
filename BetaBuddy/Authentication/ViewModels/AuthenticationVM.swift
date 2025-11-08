@@ -82,32 +82,16 @@ import Observation
     
     func updateCurrentUser() async {
         let db = Firestore.firestore()
-        let userRef = db.collection("users").document(self.currentUser?.userId ?? "")
+        guard let userId = self.currentUser?.userId else { return }
+        let userRef = db.collection("users").document(userId)
         
         do {
             let document = try await userRef.getDocument()
-            let data = document.data()
-            self.currentUser?.username = data?["username"] as? String ?? "username"
-            self.currentUser?.email = data?["email"] as? String ?? "email"
-            self.currentUser?.friends = data?["friends"] as? [String] ?? []
-            self.currentUser?.myPosts = data?["myPosts"] as? [String] ?? []
             
-            if let statsDict = data?["myStats"] as? [String: Any] {
-                self.currentUser?.myStats = Statistics(
-                    numClimbs: statsDict["numClimbs"] as? Int ?? 0,
-                    vb: statsDict["vb"] as? Int ?? 0,
-                    v0tov1: statsDict["v0tov1"] as? Int ?? 0,
-                    v1tov2: statsDict["v1tov2"] as? Int ?? 0,
-                    v2tov4: statsDict["v2tov4"] as? Int ?? 0,
-                    v4tov6: statsDict["v4tov6"] as? Int ?? 0,
-                    v6tov8: statsDict["v6tov8"] as? Int ?? 0,
-                    v8tov10: statsDict["v8tov10"] as? Int ?? 0,
-                    v10tov12: statsDict["v10tov12"] as? Int ?? 0,
-                    v12plus: statsDict["v12plus"] as? Int ?? 0
-                )
-            }
+            // Decode the entire User object from Firestore
+            self.currentUser = try document.data(as: User.self)
         } catch {
-            print("Can't find user")
+            print("Can't find user: \(error.localizedDescription)")
         }
     }
 }

@@ -12,6 +12,8 @@ struct RegisterUserView: View {
     @State private var email = ""
     @State private var password = ""
     
+    @State private var navigateToTemp = false
+    
     @Environment(AuthenticationVM.self) var authVM
     
     var body: some View {
@@ -35,6 +37,9 @@ struct RegisterUserView: View {
             Button("Sign Up") {
                 Task {
                     await authVM.register(email: email, password: password, username: username)
+                    if authVM.isLoggedIn {
+                        navigateToTemp = true
+                    }
                 }
             }
             .padding()
@@ -45,6 +50,10 @@ struct RegisterUserView: View {
             }
             .font(.system(size: 13))
             .foregroundStyle(Color(.blue))
+        }
+        .navigationDestination(isPresented: $navigateToTemp) {
+            Temp()
+                .environment(authVM)
         }
     }
 }

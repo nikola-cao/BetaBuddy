@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Statistics: Codable {
+public struct Statistics: Codable, Equatable {
     
     var numClimbs: Int = 0
     
