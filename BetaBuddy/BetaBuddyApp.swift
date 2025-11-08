@@ -28,7 +28,7 @@ struct BetaBuddyApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                ContentView()
+                RegisterUserView()
             }
         }
     }

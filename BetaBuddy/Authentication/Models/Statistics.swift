@@ -7,31 +7,35 @@
 
 import Foundation
 
-public struct Statistics {
+public struct Statistics: Codable {
     
-    var numClimbs: Int
+    var numClimbs: Int = 0
     
-    var vb: Int
-    var v0tov1: Int
-    var v1tov2: Int
-    var v2tov4: Int
-    var v4tov6: Int
-    var v6tov8: Int
-    var v8tov10: Int
-    var v10tov12: Int
-    var v12plus: Int
+    var vb: Int = 0
+    var v0tov1: Int = 0
+    var v1tov2: Int = 0
+    var v2tov4: Int = 0
+    var v4tov6: Int = 0
+    var v6tov8: Int = 0
+    var v8tov10: Int = 0
+    var v10tov12: Int = 0
+    var v12plus: Int = 0
     
     init() {
-        self.numClimbs = 0
-        self.vb = 0
-        self.v0tov1 = 0
-        self.v1tov2 = 0
-        self.v2tov4 = 0
-        self.v4tov6 = 0
-        self.v6tov8 = 0
-        self.v8tov10 = 0
-        self.v10tov12 = 0
-        self.v12plus = 0
+        
+    }
+    
+    init(numClimbs: Int, vb: Int, v0tov1: Int, v1tov2: Int, v2tov4: Int, v4tov6: Int, v6tov8: Int, v8tov10: Int, v10tov12: Int, v12plus: Int) {
+        self.numClimbs = numClimbs
+        self.vb = vb
+        self.v0tov1 = v0tov1
+        self.v1tov2 = v1tov2
+        self.v2tov4 = v2tov4
+        self.v4tov6 = v4tov6
+        self.v6tov8 = v6tov8
+        self.v8tov10 = v8tov10
+        self.v10tov12 = v10tov12
+        self.v12plus = v12plus
     }
     
 }

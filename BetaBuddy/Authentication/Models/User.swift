@@ -7,7 +7,7 @@
 
 import Foundation
 
-@Observable class User: Equatable, Identifiable {
+@Observable class User: Equatable, Identifiable, Codable {
     var id: String { userId }
     var userId: String
     var username: String

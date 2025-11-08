@@ -8,8 +8,41 @@
 import SwiftUI
 
 struct RegisterUserView: View {
+    let authVM: AuthenticationVM = AuthenticationVM()
+    
+    @State private var username = ""
+    @State private var email = ""
+    @State private var password = ""
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            
+            TextField("Username", text: $username)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+            TextField("Email", text: $email)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+            SecureField("Password", text: $password)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+            
+            Button("Sign Up") {
+                authVM.register(email: email, password: password, username: username)
+            }
+            .padding()
+            
+            Button("Already Signed Up?") {
+                
+            }
+            .font(.system(size: 13))
+        }
     }
 }
 
