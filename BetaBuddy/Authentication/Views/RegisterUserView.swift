@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct RegisterUserView: View {
-    let authVM: AuthenticationVM = AuthenticationVM()
-    
     @State private var username = ""
     @State private var email = ""
     @State private var password = ""
     
+    @Environment(AuthenticationVM.self) var authVM
+    
     var body: some View {
         VStack {
-            
             TextField("Username", text: $username)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
@@ -34,18 +33,25 @@ struct RegisterUserView: View {
                 .autocorrectionDisabled(true)
             
             Button("Sign Up") {
-                authVM.register(email: email, password: password, username: username)
+                Task {
+                    await authVM.register(email: email, password: password, username: username)
+                }
             }
             .padding()
             
-            Button("Already Signed Up?") {
-                
+            NavigationLink("Already Signed Up?") {
+                LoginView()
+                    .environment(authVM)
             }
             .font(.system(size: 13))
+            .foregroundStyle(Color(.blue))
         }
     }
 }
 
 #Preview {
-    RegisterUserView()
+    NavigationStack {
+        RegisterUserView()
+            .environment(AuthenticationVM())
+    }
 }

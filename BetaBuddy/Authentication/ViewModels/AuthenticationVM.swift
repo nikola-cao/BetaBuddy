@@ -41,43 +41,35 @@ import Observation
         }
     }
     
-    func register(email: String, password: String, username: String) {
+    func register(email: String, password: String, username: String) async {
         
-        auth.createUser(withEmail: email, password: password) { result, error in
-            if let error = error {
-                print("Error registering: \(error.localizedDescription)")
-                print(error)
-            } else {
-                print("User registered: \(result?.user.uid ?? "")")
-            }
-            
-            guard let user = result?.user else {return}
-            
-            let newUser = User(userId: user.uid, username: username, email: email, password: password)
+        // 1. Set loading state
+            self.isLoading = true
+            self.errorMessage = nil
             
             do {
-            
+                // 2. Use the 'await' version of createUser
+                let authResult = try await auth.createUser(withEmail: email, password: password)
+                print("User registered: \(authResult.user.uid)")
+
+                let user = authResult.user
+                let newUser = User(userId: user.uid, username: username, email: email, password: password)
                 
-                // The setData(from:) method automatically converts the Codable 'newUser'
-                // into a proper Firestore document, including the nested 'myStats' struct.
-                try Firebase.db.collection("users").document(newUser.userId).setData(from: newUser) { err in
-                    if let err = err {
-                        print("Error saving user: \(err)")
-                    } else {
-                        print("User profile saved in Firestore")
-                        
-                        // 3. Update currentUser
-                        DispatchQueue.main.async {
-                            self.currentUser = newUser
-                            self.isLoggedIn = true
-                            self.isLoading = false
-                        }
-                    }
-                }
-            } catch let error {
-                print("Error setting Codable data: \(error)")
+                // 3. Use the 'await' version of setData
+                try await Firebase.db.collection("users").document(newUser.userId).setData(from: newUser)
+                print("User profile saved in Firestore")
+
+                // 4. Update state (we are already on the main thread thanks to @MainActor)
+                self.currentUser = newUser
+                self.isLoggedIn = true
+                self.isLoading = false
+                
+            } catch {
+                // 5. Handle any errors from auth or firestore
+                print("Error registering: \(error.localizedDescription)")
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
             }
-        }
     }
 
     func signOut() {
