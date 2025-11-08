@@ -21,23 +21,20 @@ import Observation
         self.auth = Auth.auth()
     }
     
+    @MainActor
     func login(email: String, password: String) async {
         isLoading = true
         do {
             let authResult = try await auth.signIn(withEmail: email, password: password)
             let user = authResult.user
             
-            DispatchQueue.main.async {
-                self.isLoading = false
-                self.isLoggedIn = true
-                print("Signed in as \(user.uid)")
-                self.currentUser = User(userId: user.uid, username: user.uid, email: email)
-            }
+            self.isLoading = false
+            self.isLoggedIn = true
+            print("Signed in as \(user.uid)")
+            self.currentUser = User(userId: user.uid, username: user.uid, email: email)
         } catch {
-            DispatchQueue.main.async {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
-            }
+            self.errorMessage = error.localizedDescription
+            self.isLoading = false
         }
     }
     
