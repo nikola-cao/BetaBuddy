@@ -14,6 +14,8 @@ struct User: Equatable, Identifiable, Codable {
     var email: String
     var password: String?
     var friends: [String] = []
+    var sentFriendRequests: [String] = []
+    var receivedFriendRequests: [String] = []
     var myPosts: [String] = []
     var myStats: Statistics = Statistics()
     
