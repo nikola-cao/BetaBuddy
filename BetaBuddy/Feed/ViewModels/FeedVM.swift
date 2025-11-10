@@ -570,8 +570,8 @@ class FeedVM {
         }
     }
     
-    // Fetch all posts from Firebase
-    func fetchAllPosts() {
+    // Fetch all posts from Firebase filtered by current user and friends
+    func fetchAllPosts(currentUserID: String, friends: [String]) {
         isLoading = true
         errorMessage = nil
         
@@ -603,6 +603,11 @@ class FeedVM {
                       let gymName = data["gymName"] as? String,
                       let location = data["location"] as? String else {
                     print("Failed to parse post document")
+                    return nil
+                }
+                
+                // Filter: only show posts from current user or friends
+                if userID != currentUserID && !friends.contains(userID) {
                     return nil
                 }
                 

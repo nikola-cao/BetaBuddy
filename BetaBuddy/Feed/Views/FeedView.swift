@@ -84,7 +84,9 @@ struct FeedView: View {
             }
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
-                    feedVM.fetchAllPosts()
+                    if let currentUserID = authVM.currentUser?.userId {
+                        feedVM.fetchAllPosts(currentUserID: currentUserID, friends: authVM.currentUser?.friends ?? [])
+                    }
                 }) {
                     Label("Refresh", systemImage: "arrow.clockwise")
                 }
@@ -101,7 +103,9 @@ struct FeedView: View {
         }
         .onAppear {
             // Fetch posts when view appears
-            feedVM.fetchAllPosts()
+            if let currentUserID = authVM.currentUser?.userId {
+                feedVM.fetchAllPosts(currentUserID: currentUserID, friends: authVM.currentUser?.friends ?? [])
+            }
         }
     }
 }
