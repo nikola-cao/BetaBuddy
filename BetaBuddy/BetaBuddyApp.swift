@@ -34,9 +34,16 @@ struct BetaBuddyApp: App {
     
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                RegisterUserView()
+            if authVM.currentUser != nil {
+                // User is logged in, show main app with tabs
+                MainTabView()
                     .environment(authVM)
+            } else {
+                // User is not logged in, show registration/login
+                NavigationStack {
+                    RegisterUserView()
+                        .environment(authVM)
+                }
             }
         }
     }

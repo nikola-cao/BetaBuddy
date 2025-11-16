@@ -28,10 +28,19 @@ import Observation
             let authResult = try await auth.signIn(withEmail: email, password: password)
             let user = authResult.user
             
+            print("✅ Signed in as \(user.uid)")
+            
+            // Set a temporary user so updateCurrentUser can fetch the full data
+            self.currentUser = User(userId: user.uid, username: user.uid, email: email)
+            print("⏳ Fetching full user data from Firestore...")
+            
+            // Fetch the full user data from Firestore (including friends list)
+            await updateCurrentUser()
+            
+            print("✅ Full user data loaded. Friends count: \(self.currentUser?.friends.count ?? 0)")
+            
             self.isLoading = false
             self.isLoggedIn = true
-            print("Signed in as \(user.uid)")
-            self.currentUser = User(userId: user.uid, username: user.uid, email: email)
         } catch {
             self.errorMessage = error.localizedDescription
             self.isLoading = false

@@ -9,6 +9,10 @@ class FeedVM {
     var userMap: [String: String] = [:] // Maps userID to username
     var isLoading: Bool = false
     var errorMessage: String?
+    
+    // Store these to use in the snapshot listener
+    private var currentUserID: String?
+    private var friends: [String] = []
 
     func sendFriendRequest(currentUserID: String, otherUserID: String) {
         isLoading = true
@@ -658,5 +662,37 @@ class FeedVM {
             print("Successfully loaded \(self.posts.count) posts")
             self.isLoading = false
         }
+    }
+    
+    func getLivePostChanges(currentUserID: String, friends: [String]) {
+        // Store the values so we can use the latest ones in the listener
+        self.currentUserID = currentUserID
+        self.friends = friends
+        
+        print("🎯 Setting up listener with userID: \(currentUserID), friends count: \(friends.count)")
+        
+        // Listen for real-time changes in the posts collection
+        Firebase.db.collection("posts").addSnapshotListener { snapshot, error in
+            guard let snapshot = snapshot else {
+                print("Error fetching updates: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            
+            // If there are any changes, refresh all posts using the stored (latest) values
+            if !snapshot.documentChanges.isEmpty {
+                print("📢 Posts collection changed, refreshing feed...")
+                print("🔍 Using friends count: \(self.friends.count)")
+                
+                if let userID = self.currentUserID {
+                    self.fetchAllPosts(currentUserID: userID, friends: self.friends)
+                }
+            }
+        }
+    }
+    
+    // Call this whenever the friends list updates to refresh the stored value
+    func updateFriends(_ friends: [String]) {
+        self.friends = friends
+        print("✅ Updated friends list in FeedVM: \(friends.count) friends")
     }
 }

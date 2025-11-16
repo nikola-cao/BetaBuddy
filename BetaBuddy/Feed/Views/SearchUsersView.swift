@@ -9,8 +9,8 @@ import SwiftUI
 
 struct SearchUsersView: View {
     
+    @State private var feedVM = FeedVM()
     @Environment(AuthenticationVM.self) var authVM
-    @Environment(FeedVM.self) var feedVM
     
     // Computed property to get available users (excluding friends and pending requests)
     private var availableUsers: [String] {

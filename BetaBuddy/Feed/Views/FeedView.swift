@@ -68,20 +68,6 @@ struct FeedView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                    navigateToSearchUsersView = true
-                }) {
-                    Label("searchUsers", systemImage: "magnifyingglass")
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                    navigateToCreatePostView = true
-                }) {
-                    Label("addPost", systemImage: "plus.circle")
-                }
-            }
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
                     if let currentUserID = authVM.currentUser?.userId {
@@ -102,9 +88,26 @@ struct FeedView: View {
                 .environment(feedVM)
         }
         .onAppear {
-            // Fetch posts when view appears
-            if let currentUserID = authVM.currentUser?.userId {
-                feedVM.fetchAllPosts(currentUserID: currentUserID, friends: authVM.currentUser?.friends ?? [])
+            // Initial load when view appears
+            print("FeedView onAppear - Current user: \(authVM.currentUser?.username ?? "nil")")
+            print("FeedView onAppear - Friends count: \(authVM.currentUser?.friends.count ?? 0)")
+            
+            if let currentUserID = authVM.currentUser?.userId,
+                let friends = authVM.currentUser?.friends {
+                feedVM.fetchAllPosts(currentUserID: currentUserID, friends: friends)
+                feedVM.getLivePostChanges(currentUserID: currentUserID, friends: friends)
+            }
+        }
+        .onChange(of: authVM.currentUser?.friends) { oldValue, newValue in
+            // Reload when friends list is updated (e.g., after login completes)
+            print("Friends list changed from \(oldValue?.count ?? 0) to \(newValue?.count ?? 0)")
+            
+            if let currentUserID = authVM.currentUser?.userId,
+                let friends = newValue {
+                // Update the stored friends list in FeedVM so the listener uses the latest
+                feedVM.updateFriends(friends)
+                // Also do an immediate fetch with the new friends list
+                feedVM.fetchAllPosts(currentUserID: currentUserID, friends: friends)
             }
         }
     }
