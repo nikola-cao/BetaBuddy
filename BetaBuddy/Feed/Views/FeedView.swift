@@ -67,26 +67,6 @@ struct FeedView: View {
             .padding(.bottom, 16)
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: {
-                    if let currentUserID = authVM.currentUser?.userId {
-                        feedVM.fetchAllPosts(currentUserID: currentUserID, friends: authVM.currentUser?.friends ?? [])
-                    }
-                }) {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                }
-            }
-        }
-        .navigationDestination(isPresented: $navigateToCreatePostView) {
-            CreatePostView()
-                .environment(authVM)
-        }
-        .navigationDestination(isPresented: $navigateToSearchUsersView) {
-            SearchUsersView()
-                .environment(authVM)
-                .environment(feedVM)
-        }
         .onAppear {
             // Initial load when view appears
             print("FeedView onAppear - Current user: \(authVM.currentUser?.username ?? "nil")")

@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct CreatePostView: View {
+    // Binding to control the selected tab
+    @Binding var selectedTab: Int
+    
     // State variables for form inputs
     @State private var grade: Grades = .v4tov6
     @State private var attempts: String = ""
@@ -17,8 +20,6 @@ struct CreatePostView: View {
     
     // Date components
     @State private var selectedDate: Date = Date()
-    
-    @State private var navigateToFeed = false
     
     @Environment(AuthenticationVM.self) var authVM
     @State private var createPostVM = CreatePostVM()
@@ -136,13 +137,13 @@ struct CreatePostView: View {
                 
                 // Post Button
                 Button(action: {
-                    // Action placeholder - to be implemented later
                     print("Post button tapped")
                     if authVM.currentUser == nil {
                         print("Couldn't get current user")
                     } else {
                         createPostVM.addNewPost(post: createPreviewPost())
-                        navigateToFeed = true
+                        // Switch to Feed tab (tag 0)
+                        selectedTab = 0
                     }
                     
                 }) {
@@ -161,10 +162,6 @@ struct CreatePostView: View {
         }
         .navigationTitle("Create Post")
         .navigationBarTitleDisplayMode(.large)
-        .navigationDestination(isPresented: $navigateToFeed) {
-            FeedView()
-                .environment(authVM)
-        }
     }
     
     // Helper function to create preview post
@@ -193,7 +190,7 @@ struct CreatePostView: View {
 
 #Preview {
     NavigationStack {
-        CreatePostView()
+        CreatePostView(selectedTab: .constant(1))
             .environment(AuthenticationVM())
     }
 }

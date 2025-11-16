@@ -25,7 +25,7 @@ struct MainTabView: View {
             
             // Create Post Tab - resets when you navigate away
             NavigationStack {
-                CreatePostView()
+                CreatePostView(selectedTab: $selectedTab)
                     .environment(authVM)
             }
             .tabItem {
