@@ -45,11 +45,15 @@ struct MainTabView: View {
             .tag(2)
             
             // Profile Tab (placeholder - you can expand this later)
-            ProfileTabView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
-                .tag(3)
+            NavigationStack {
+                ProfileView()
+                    .environment(authVM)
+            }
+            .tabItem {
+                Label("Profile", systemImage: "person.fill")
+            }
+            .tag(3)
+                
         }
     }
 }

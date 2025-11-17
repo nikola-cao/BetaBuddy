@@ -28,6 +28,15 @@ struct LoginView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
             
+            // Error message display
+            if let errorMessage = authVM.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .font(.subheadline)
+                    .padding(.horizontal)
+                    .multilineTextAlignment(.center)
+            }
+            
             Button("Sign In") {
                 Task {
                     await authVM.login(email: email, password: password)
@@ -38,6 +47,12 @@ struct LoginView: View {
                 }
             }
             .padding()
+            .disabled(authVM.isLoading)
+            
+            if authVM.isLoading {
+                ProgressView()
+                    .padding()
+            }
             
             Button("Still Need to Register?") {
                 dismiss()

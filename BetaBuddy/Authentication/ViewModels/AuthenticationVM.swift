@@ -24,6 +24,8 @@ import Observation
     @MainActor
     func login(email: String, password: String) async {
         isLoading = true
+        errorMessage = nil // Clear previous errors
+        
         do {
             let authResult = try await auth.signIn(withEmail: email, password: password)
             let user = authResult.user
@@ -42,7 +44,23 @@ import Observation
             self.isLoading = false
             self.isLoggedIn = true
         } catch {
-            self.errorMessage = error.localizedDescription
+            // Provide user-friendly error messages
+            let errorCode = (error as NSError).code
+            
+            switch errorCode {
+            case 17011: // User not found
+                self.errorMessage = "This account does not exist. Please check your email or register."
+            case 17009: // Wrong password
+                self.errorMessage = "Incorrect password. Please try again."
+            case 17008: // Invalid email
+                self.errorMessage = "Invalid email format. Please check and try again."
+            case 17020: // Network error
+                self.errorMessage = "Network error. Please check your connection."
+            default:
+                self.errorMessage = "Login failed. Please try again."
+            }
+            
+            print("❌ Login error: \(error.localizedDescription)")
             self.isLoading = false
         }
     }
@@ -101,6 +119,89 @@ import Observation
             self.currentUser = try document.data(as: User.self)
         } catch {
             print("Can't find user: \(error.localizedDescription)")
+        }
+    }
+    
+    @MainActor
+    func deleteAccount() async {
+        guard let user = auth.currentUser,
+              let currentUserId = self.currentUser?.userId else {
+            self.errorMessage = "No user logged in"
+            return
+        }
+        
+        isLoading = true
+        
+        do {
+            let db = Firestore.firestore()
+            
+            // 1. Delete all user's posts
+            let postsSnapshot = try await db.collection("posts")
+                .whereField("userID", isEqualTo: currentUserId)
+                .getDocuments()
+            
+            for document in postsSnapshot.documents {
+                try await document.reference.delete()
+            }
+            print("✅ Deleted all user posts")
+            
+            // 2. Remove user from all friends lists
+            let usersSnapshot = try await db.collection("users").getDocuments()
+            
+            for document in usersSnapshot.documents {
+                let data = document.data()
+                var needsUpdate = false
+                var updates: [String: Any] = [:]
+                
+                // Remove from friends arrays
+                if var friends = data["friends"] as? [String],
+                   let index = friends.firstIndex(of: currentUserId) {
+                    friends.remove(at: index)
+                    updates["friends"] = friends
+                    needsUpdate = true
+                }
+                
+                // Remove from sentFriendRequests
+                if var sentRequests = data["sentFriendRequests"] as? [String],
+                   let index = sentRequests.firstIndex(of: currentUserId) {
+                    sentRequests.remove(at: index)
+                    updates["sentFriendRequests"] = sentRequests
+                    needsUpdate = true
+                }
+                
+                // Remove from receivedFriendRequests
+                if var receivedRequests = data["receivedFriendRequests"] as? [String],
+                   let index = receivedRequests.firstIndex(of: currentUserId) {
+                    receivedRequests.remove(at: index)
+                    updates["receivedFriendRequests"] = receivedRequests
+                    needsUpdate = true
+                }
+                
+                if needsUpdate {
+                    try await document.reference.updateData(updates)
+                }
+            }
+            print("✅ Removed user from all friends lists")
+            
+            // 3. Delete user document from Firestore
+            try await db.collection("users").document(currentUserId).delete()
+            print("✅ Deleted user document")
+            
+            // 4. Delete user from Firebase Auth
+            try await user.delete()
+            print("✅ Deleted user from Firebase Auth")
+            
+            // 5. Clear local state
+            self.currentUser = nil
+            self.isLoggedIn = false
+            self.isLoading = false
+            
+            print("✅ Account deleted successfully")
+            
+        } catch {
+            print("❌ Error deleting account: \(error.localizedDescription)")
+            self.errorMessage = "Failed to delete account: \(error.localizedDescription)"
+            self.isLoading = false
         }
     }
 }

@@ -11,6 +11,34 @@ struct SearchUsersView: View {
     
     @State private var feedVM = FeedVM()
     @Environment(AuthenticationVM.self) var authVM
+    @State private var searchText = ""
+    
+    // Helper function to filter users by search text
+    private func matchesSearch(_ userID: String) -> Bool {
+        if searchText.isEmpty {
+            return true
+        }
+        let username = feedVM.userMap[userID]?.lowercased() ?? ""
+        return username.contains(searchText.lowercased())
+    }
+    
+    // Computed property to get filtered friends
+    private var filteredFriends: [String] {
+        let friends = authVM.currentUser?.friends ?? []
+        return friends.filter { matchesSearch($0) }
+    }
+    
+    // Computed property to get filtered received requests
+    private var filteredReceivedRequests: [String] {
+        let receivedRequests = authVM.currentUser?.receivedFriendRequests ?? []
+        return receivedRequests.filter { matchesSearch($0) }
+    }
+    
+    // Computed property to get filtered sent requests
+    private var filteredSentRequests: [String] {
+        let sentRequests = authVM.currentUser?.sentFriendRequests ?? []
+        return sentRequests.filter { matchesSearch($0) }
+    }
     
     // Computed property to get available users (excluding friends and pending requests)
     private var availableUsers: [String] {
@@ -21,16 +49,39 @@ struct SearchUsersView: View {
         return feedVM.users.filter { userID in
             !friends.contains(userID) &&
             !sentRequests.contains(userID) &&
-            !receivedRequests.contains(userID)
+            !receivedRequests.contains(userID) &&
+            matchesSearch(userID)
         }
     }
     
     var body: some View {
         List {
+            // Show empty state if searching and no results
+            if !searchText.isEmpty && 
+               filteredFriends.isEmpty && 
+               filteredReceivedRequests.isEmpty && 
+               filteredSentRequests.isEmpty && 
+               availableUsers.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 50))
+                        .foregroundColor(.gray)
+                    Text("No users found")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    Text("Try a different search term")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 60)
+                .listRowBackground(Color.clear)
+            }
+            
             // Friends section
-            if !(authVM.currentUser?.friends ?? []).isEmpty {
+            if !filteredFriends.isEmpty {
                 Section("Friends") {
-                    ForEach(authVM.currentUser?.friends ?? [], id: \.self) { friendID in
+                    ForEach(filteredFriends, id: \.self) { friendID in
                         HStack {
                             Text(feedVM.userMap[friendID] ?? "Unknown")
                             Spacer()
@@ -51,9 +102,9 @@ struct SearchUsersView: View {
             }
             
             // Received friend requests section
-            if !(authVM.currentUser?.receivedFriendRequests ?? []).isEmpty {
+            if !filteredReceivedRequests.isEmpty {
                 Section("Friend Requests") {
-                    ForEach(authVM.currentUser?.receivedFriendRequests ?? [], id: \.self) { requestID in
+                    ForEach(filteredReceivedRequests, id: \.self) { requestID in
                         HStack {
                             Text(feedVM.userMap[requestID] ?? "Unknown")
                             Spacer()
@@ -90,9 +141,9 @@ struct SearchUsersView: View {
             }
             
             // Sent friend requests section
-            if !(authVM.currentUser?.sentFriendRequests ?? []).isEmpty {
+            if !filteredSentRequests.isEmpty {
                 Section("Pending Requests") {
-                    ForEach(authVM.currentUser?.sentFriendRequests ?? [], id: \.self) { requestID in
+                    ForEach(filteredSentRequests, id: \.self) { requestID in
                         HStack {
                             Text(feedVM.userMap[requestID] ?? "Unknown")
                             Spacer()
@@ -139,6 +190,7 @@ struct SearchUsersView: View {
             feedVM.fetchAllUsers(excludeUserID: authVM.currentUser?.userId)
         }
         .navigationTitle("Friends")
+        .searchable(text: $searchText, prompt: "Search users...")
     }
 }
 

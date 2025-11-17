@@ -34,6 +34,15 @@ struct RegisterUserView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
             
+            // Error message display
+            if let errorMessage = authVM.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .font(.subheadline)
+                    .padding(.horizontal)
+                    .multilineTextAlignment(.center)
+            }
+            
             Button("Sign Up") {
                 Task {
                     await authVM.register(email: email, password: password, username: username)
@@ -43,6 +52,12 @@ struct RegisterUserView: View {
                 }
             }
             .padding()
+            .disabled(authVM.isLoading)
+            
+            if authVM.isLoading {
+                ProgressView()
+                    .padding()
+            }
             
             NavigationLink("Already Signed Up?") {
                 LoginView()
