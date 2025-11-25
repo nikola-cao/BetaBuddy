@@ -2,7 +2,7 @@
 //  ProfileView.swift
 //  BetaBuddy
 //
-//  Created by Sarvesh Gade on 11/16/25.
+//  Profile View with Design System styling
 //
 
 import SwiftUI
@@ -13,203 +13,364 @@ struct ProfileView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Profile Header
-                VStack(spacing: 16) {
-                    // Profile Picture
-                    Image(systemName: "person.circle.fill")
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                        .foregroundColor(.blue)
-                    
-                    // Username and Email
-                    if let user = authVM.currentUser {
-                        Text(user.username)
-                            .font(.title)
-                            .bold()
-                        
-                        Text(user.email)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        // Post count
-                        Text("\(profileVM.posts.count) \(profileVM.posts.count == 1 ? "Post" : "Posts")")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                    }
-                    
-                    // Sign Out Button
-                    Button(action: {
-                        authVM.signOut()
-                    }) {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal, 16)
-                }
-                .padding(.top, 20)
-                .padding(.bottom, 10)
-                
-                Divider()
-                    .padding(.horizontal, 16)
-                
-                // Posts Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("My Posts")
-                        .font(.title2)
-                        .bold()
-                        .padding(.horizontal, 16)
-                    
-                    // Loading state
-                    if profileVM.isLoading {
-                        ProgressView("Loading posts...")
-                            .padding()
-                    }
-                    
-                    // Error message
-                    if let errorMessage = profileVM.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .padding()
-                    }
-                    
-                    // Posts list or empty state
-                    if !profileVM.isLoading && profileVM.posts.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "doc.text")
-                                .font(.system(size: 50))
-                                .foregroundColor(.gray)
-                            Text("No posts yet")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                            Text("Start sharing your climbs!")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
-                    } else {
-                        ForEach(profileVM.posts) { post in
-                            ProfilePostView(
-                                post: post,
-                                onDelete: {
-                                    if let userID = authVM.currentUser?.userId {
-                                        profileVM.deletePost(postID: post.postID, userID: userID)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
+            VStack(spacing: 24) {
+                profileHeader
+                statsGrid
+                postsSection
             }
+            .padding(.bottom, 100)
         }
+        .background(Color.backgroundBase)
         .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink(destination: SettingsView().environment(authVM)) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(.blue)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(Color.textPrimary)
                 }
             }
         }
         .onAppear {
-            // Fetch user's posts when view appears
             if let userID = authVM.currentUser?.userId {
                 profileVM.fetchUserPosts(userID: userID)
             }
         }
     }
+    
+    // MARK: - Profile Header
+    
+    private var profileHeader: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.betaBlue, Color.betaBlue.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+                
+                if let user = authVM.currentUser {
+                    Text(user.username.prefix(1).uppercased())
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.white)
+                }
+            }
+            .shadow(color: Color.betaBlue.opacity(0.3), radius: 10, x: 0, y: 4)
+            
+            if let user = authVM.currentUser {
+                VStack(spacing: 6) {
+                    Text(user.username)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.textPrimary)
+                    
+                    Text(user.email)
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundColor(Color.textSecondary)
+                }
+            }
+            
+            Button {
+                authVM.signOut()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("Sign Out")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                }
+                .foregroundColor(Color.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    LinearGradient(
+                        colors: [Color.red.opacity(0.9), Color.red],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .clipShape(Capsule())
+            }
+            .padding(.top, 8)
+        }
+        .padding(.top, 20)
+        .padding(.bottom, 8)
+    }
+    
+    // MARK: - Stats Grid
+    
+    private var statsGrid: some View {
+        HStack(spacing: 0) {
+            ProfileStatItem(
+                value: "\(profileVM.posts.count)",
+                label: "Posts",
+                icon: "doc.text.fill",
+                color: Color.sendOrange
+            )
+            
+            Divider()
+                .frame(height: 50)
+                .background(Color.textSecondary.opacity(0.2))
+            
+            ProfileStatItem(
+                value: "\(authVM.currentUser?.friends.count ?? 0)",
+                label: "Friends",
+                icon: "person.2.fill",
+                color: Color.betaBlue
+            )
+            
+            Divider()
+                .frame(height: 50)
+                .background(Color.textSecondary.opacity(0.2))
+            
+            ProfileStatItem(
+                value: "\(authVM.currentUser?.myStats.numClimbs ?? 0)",
+                label: "Climbs",
+                icon: "figure.climbing",
+                color: Color.green
+            )
+        }
+        .padding(.vertical, 16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .padding(.horizontal, 16)
+    }
+    
+    // MARK: - Posts Section
+    
+    private var postsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("My Climbs")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.textPrimary)
+                
+                Spacer()
+                
+                Text("\(profileVM.posts.count) total")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(Color.textSecondary)
+            }
+            .padding(.horizontal, 16)
+            
+            if profileVM.isLoading {
+                loadingView
+            } else if let errorMessage = profileVM.errorMessage {
+                errorView(message: errorMessage)
+            } else if profileVM.posts.isEmpty {
+                emptyStateView
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(profileVM.posts) { post in
+                        ProfilePostCard(
+                            post: post,
+                            onDelete: {
+                                if let userID = authVM.currentUser?.userId {
+                                    profileVM.deletePost(postID: post.postID, userID: userID)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Loading View
+    
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+                .tint(Color.betaBlue)
+            
+            Text("Loading your posts...")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(Color.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+    
+    // MARK: - Error View
+    
+    @ViewBuilder
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 36))
+                .foregroundColor(Color.sendOrange)
+            
+            Text(message)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(Color.red)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+    
+    // MARK: - Empty State View
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.betaBlue.opacity(0.1))
+                    .frame(width: 80, height: 80)
+                
+                Image(systemName: "figure.climbing")
+                    .font(.system(size: 36))
+                    .foregroundColor(Color.betaBlue)
+            }
+            
+            VStack(spacing: 6) {
+                Text("No Climbs Yet")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(Color.textPrimary)
+                
+                Text("Start sharing your climbing sessions!")
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundColor(Color.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
 }
 
-// Post view with delete menu for profile page
-struct ProfilePostView: View {
+// MARK: - Profile Stat Item
+
+struct ProfileStatItem: View {
+    let value: String
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 22))
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(Color.textPrimary)
+            
+            Text(label)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundColor(Color.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Profile Post Card
+
+struct ProfilePostCard: View {
     let post: PostModel
     let onDelete: () -> Void
     @State private var showDeleteConfirmation = false
     
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            // Post content (reusing the same layout as PostView)
-            VStack(alignment: .leading, spacing: 12) {
-                // Header with username and date
-                HStack {
-                    Text(post.username)
-                        .font(.headline)
-                    Spacer()
-                    Text(post.date.toString())
-                        .font(.caption)
-                        .foregroundColor(.gray)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 12))
+                    Text(formatDate(post.date))
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                }
+                .foregroundColor(Color.textSecondary)
+                
+                Spacer()
+                
+                Menu {
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete Post", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color.textSecondary)
+                        .padding(8)
+                }
+            }
+            
+            HStack(spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "mountain.2.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(Color.betaBlue)
+                    
+                    Text(post.grade.rawValue.uppercased())
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.textPrimary)
                 }
                 
-                HStack {
-                    // Climb details
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Grade:")
-                                .foregroundColor(.secondary)
-                            Text(post.grade.rawValue)
-                                .bold()
-                        }
-                        
-                        HStack {
-                            Text("Attempts:")
-                                .foregroundColor(.secondary)
-                            Text("\(post.attempts)")
-                        }
-                        
-                        HStack {
-                            Text("Gym:")
-                                .foregroundColor(.secondary)
-                            Text("\(post.gymName)")
-                        }
-                        
-                        HStack {
-                            Text("Location:")
-                                .foregroundColor(.secondary)
-                            Text(post.location)
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Notes section
-                    if !post.notes.isEmpty {
-                        Text(post.notes)
-                            .font(.body)
-                            .padding(.top, 4)
-                    }
+                Text("•")
+                    .foregroundColor(Color.textSecondary)
+                
+                HStack(spacing: 4) {
+                    Text("\(post.attempts)")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.sendOrange)
+                    Text(post.attempts == 1 ? "attempt" : "attempts")
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundColor(Color.textSecondary)
                 }
+                
+                if post.attempts == 1 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 12))
+                        Text("Flash!")
+                    }
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.sendOrange)
+                    .clipShape(Capsule())
+                }
+                
+                Spacer()
             }
-            .padding()
-            .frame(maxWidth: .infinity)
             
-            // Delete button with menu
-            Menu {
-                Button(role: .destructive, action: {
-                    showDeleteConfirmation = true
-                }) {
-                    Label("Delete Post", systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.title3)
-                    .foregroundColor(.gray)
-                    .padding()
+            HStack(spacing: 6) {
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.sendOrange)
+                
+                Text("\(post.gymName), \(post.location)")
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundColor(Color.textSecondary)
+                    .lineLimit(1)
+            }
+            
+            if !post.notes.isEmpty {
+                Text(post.notes)
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundColor(Color.textPrimary)
+                    .lineLimit(2)
+                    .padding(.top, 4)
             }
         }
-        .background(Color(.systemGray6))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .padding(16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .confirmationDialog(
-            "Are you sure you want to delete this post?",
+            "Delete this post?",
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
@@ -217,11 +378,30 @@ struct ProfilePostView: View {
                 onDelete()
             }
             Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
         }
+    }
+    
+    private func formatDate(_ postDate: PostDate) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        
+        var components = DateComponents()
+        components.year = postDate.year
+        components.month = postDate.month
+        components.day = postDate.day
+        
+        if let date = Calendar.current.date(from: components) {
+            return dateFormatter.string(from: date)
+        }
+        return postDate.toString()
     }
 }
 
-#Preview {
+// MARK: - Preview
+
+#Preview("ProfileView") {
     NavigationStack {
         ProfileView()
             .environment(AuthenticationVM())
