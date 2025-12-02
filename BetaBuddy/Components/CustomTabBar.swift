@@ -64,7 +64,7 @@ struct CustomTabBar: View {
     }
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             // Tab Bar Background
             tabBarBackground
             
@@ -78,6 +78,7 @@ struct CustomTabBar: View {
                     }
                 }
             }
+            .frame(height: Layout.tabBarHeight)
             .padding(.horizontal, 8)
         }
         .frame(height: Layout.tabBarHeight + 20)
@@ -152,8 +153,7 @@ struct CustomTabBar: View {
                     .font(.system(size: 10, weight: isSelected ? .semibold : .regular, design: .rounded))
                     .foregroundColor(isSelected ? Color.betaBlue : Color.white.opacity(0.6))
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .buttonStyle(.plain)
     }
