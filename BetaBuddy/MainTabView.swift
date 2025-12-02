@@ -31,7 +31,7 @@ struct MainTabView: View {
                     }
                 case 3:
                     NavigationStack {
-                        AnalyticsPlaceholderView()
+                        AnalyticsView()
                             .environment(authVM)
                     }
                 case 4:
